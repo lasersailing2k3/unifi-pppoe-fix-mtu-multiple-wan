@@ -3,8 +3,9 @@
 # Unifi PPPoE MTU Fix Installer
 # Installs or updates the fix-mtu scripts on UnifiOS.
 
-REPO_USER="ishioni"
-REPO_NAME="unifi-pppoe-fix-mtu"
+REPO_USER="lasersailing2k3"
+REPO_NAME="unifi-pppoe-fix-mtu-multiple-wan
+"
 BRANCH="master"
 INSTALL_DIR="/data/fix-mtu"
 SERVICE_DEST="/etc/systemd/system/fix-mtu.service"
