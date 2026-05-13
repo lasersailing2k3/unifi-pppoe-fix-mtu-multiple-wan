@@ -19,68 +19,83 @@ By default, Unifi OS often limits PPPoE connections to an MTU of 1492. This scri
 Run the following command on your Unifi Gateway to download and install the scripts automatically:
 
 ```bash
-curl -sL [https://raw.githubusercontent.com/lasersailing2k3/unifi-pppoe-fix-mtu-multiple-wan/master/install.sh](https://raw.githubusercontent.com/lasersailing2k3/unifi-pppoe-fix-mtu-multiple-wan/master/install.sh) | bash
+curl -sL https://raw.githubusercontent.com/lasersailing2k3/unifi-pppoe-fix-mtu-multiple-wan/master/install.sh | bash
+```
 
 **After installation:**
 Check and configure your interfaces in /data/fix-mtu/fix-mtu.conf.
 
-Bash
+```bash
 nano /data/fix-mtu/fix-mtu.conf
+```
 Update the CONNECTIONS array using the syntax "PPP_INTERFACE:WAN_INTERFACE:VLAN_ID:MTU". If a connection does not use a VLAN, leave the VLAN section blank between the colons.
 
-Example Configuration:
-
-Bash
+**Example Configuration:**
+```bash
 CONNECTIONS=(
     "ppp0:eth8:35:1500" # Primary WAN on eth8 using VLAN 35
     "ppp1:eth7::1500"   # Secondary WAN on eth7 without a VLAN
 )
-Restart the service to apply changes:
-
-Bash
+```
+**Restart the service to apply changes:**
+```bash
 systemctl restart fix-mtu
-Manual Installation
+```
+
+### Manual Installation
+
 If you prefer to install manually:
 
-SSH into your Unifi Gateway:
-
-Bash
+**SSH into your Unifi Gateway:**
+```bash
 ssh root@<your-gateway-ip>
-Prepare the directory:
+```
+
+**Prepare the directory:**
 Create a persistent directory for the scripts.
 
-Bash
+```bash
 mkdir -p /data/fix-mtu
-Copy files:
+```
+**Copy files:**
 Upload fix-mtu.sh, monitor-mtu.sh, fix-mtu.conf, and fix-mtu.service to /data/fix-mtu/ on your Gateway. You can use scp from your local machine:
 
-Bash
+```bash
 scp *mtu* root@<your-gateway-ip>:/data/fix-mtu/
-Configure the script:
+```
+
+**Configure the script:**
 Edit the configuration file /data/fix-mtu/fix-mtu.conf:
 
-Bash
+```bash
 vi /data/fix-mtu/fix-mtu.conf
-Define your connection array. Adjust the values to match your physical ports and ISP requirements:
-
-Bash
+```
+**Define your connection array. Adjust the values to match your physical ports and ISP requirements:**
+```
+bash
 CONNECTIONS=(
     "ppp0:eth8:35:1500"
 )
-Make scripts executable:
+```
 
-Bash
+**Make scripts executable:**
+```bash
 chmod +x /data/fix-mtu/*.sh
-Install and Enable the Service:
+```
+
+**Install and Enable the Service:**
 Copy the systemd service file and enable it so it runs on boot.
 
-Bash
+```bash
 cp /data/fix-mtu/fix-mtu.service /etc/systemd/system/
 systemctl daemon-reload
 systemctl enable fix-mtu
 systemctl start fix-mtu
-Important Configuration
-Disable MSS Clamping:
+```
+
+**##Important Configuration**
+
+**Disable MSS Clamping:** 
 For this fix to work correctly, you must disable MSS Clamping in the Unifi Network application.
 
 Go to Devices and select your Gateway.
