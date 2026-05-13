@@ -1,33 +1,30 @@
 #!/bin/bash
 
 # Source configuration
+cd /data/fix-mtu || exit 1
 if [ -f "fix-mtu.conf" ]; then
-  source fix-mtu.conf
+    source fix-mtu.conf
 else
-  echo "Config file not found, exiting"
-  exit 1
+    echo "Config file not found, exiting"
+    exit 1
 fi
 
-attempt=1
-MTUPATH="/sys/class/net/${PPP_INTERFACE}/mtu"
+echo "Starting Multi-WAN MTU Monitor..."
 
-while [ ! -f "${MTUPATH}" ];
-do
-	echo "${PPP_INTERFACE} device not ready - attempt #$attempt"
-	(( attempt++ ))
-	sleep 15
+# 1. Execute an initial run for any WAN interfaces currently active at boot
+/data/fix-mtu/fix-mtu.sh
+
+# 2. Continuously monitor real-time link events
+ip monitor link | while read -r line; do
+    for conn in "${CONNECTIONS[@]}"; do
+        IFS=':' read -r ppp_if wan_if vlan_id mtu <<< "$conn"
+        
+        # Match exact interface name (e.g., "ppp0:") and MTU parameters
+        if [[ "$line" == *"${ppp_if}:"* && "$line" == *"mtu"* ]]; then
+            echo "MTU/Link event detected on ${ppp_if}: $line"
+            # Allow interface structures in sysfs to populate fully
+            sleep 1 
+            /data/fix-mtu/fix-mtu.sh "${ppp_if}"
+        fi
+    done
 done
-
-INTERFACE_MTU=$(cat "$MTUPATH")
-echo "MTU for ${PPP_INTERFACE} on startup is ${INTERFACE_MTU}"
-
-if [ "${INTERFACE_MTU}" -ne ${MTU} ]; then
-	/data/fix-mtu/fix-mtu.sh
-else
-	ip monitor link | while read -r line; do
-	  if [[ "$line" == *"${PPP_INTERFACE}"* && "$line" == *"mtu"* ]]; then
-  		echo "MTU change detected on ${PPP_INTERFACE}: $line"
-  		/data/fix-mtu/fix-mtu.sh
-	  fi
-	done
-fi
